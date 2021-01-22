@@ -195,7 +195,7 @@ static MainViewController *instance;
 	textInputViewController.action = @selector(nethackSearchCountEntered:);
 	textInputViewController.prompt = @"Enter search count";
 	textInputViewController.text = @"20";
-    self.navigationController.view.frame = [[UIScreen mainScreen] applicationFrame]; //iNethack2 - fix for width on iphone6
+    self.navigationController.view.frame = [[UIScreen mainScreen] bounds]; //iNethack2 - fix for width on iphone6
 	[self.navigationController pushViewController:textInputViewController animated:YES];
 }
 
@@ -213,7 +213,7 @@ static MainViewController *instance;
 - (void) pushViewControllerOnMainThread:(UIViewController *)viewController
 {
 	[self.navigationController setNavigationBarHidden:NO animated:YES];
-    self.navigationController.view.frame = [[UIScreen mainScreen] applicationFrame]; //iNethack2 - fix for width on iphone6
+    self.navigationController.view.frame = [[UIScreen mainScreen] bounds]; //iNethack2 - fix for width on iphone6
     [self.navigationController pushViewController:viewController animated:YES];
 }
 
@@ -222,7 +222,7 @@ static MainViewController *instance;
 	viewController.log = l;
 	viewController.text = text;
 	viewController.condition = condition;
-    self.navigationController.view.frame = [[UIScreen mainScreen] applicationFrame]; //iNethack2 - fix for width on iphone6
+    self.navigationController.view.frame = [[UIScreen mainScreen] bounds]; //iNethack2 - fix for width on iphone6
     [self performSelectorOnMainThread:@selector(pushViewControllerOnMainThread:) withObject:viewController waitUntilDone:YES];
 	[viewController release];
 }
@@ -263,7 +263,7 @@ static MainViewController *instance;
 	TextDisplayViewController *viewController = [TextDisplayViewController new];
 	viewController.text = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:NULL];
 	viewController.HTML = YES;
-    self.navigationController.view.frame = [[UIScreen mainScreen] applicationFrame]; //iNethack2 - fix for width on iphone6
+    self.navigationController.view.frame = [[UIScreen mainScreen] bounds]; //iNethack2 - fix for width on iphone6
     [self.navigationController pushViewController:viewController animated:YES];
 	[viewController release];
 }
@@ -273,7 +273,7 @@ static MainViewController *instance;
 	TextDisplayViewController *viewController = [TextDisplayViewController new];
 	viewController.text = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:NULL];
 	viewController.HTML = YES;
-    self.navigationController.view.frame = [[UIScreen mainScreen] applicationFrame]; //iNethack2 - fix for width on iphone6
+    self.navigationController.view.frame = [[UIScreen mainScreen] bounds]; //iNethack2 - fix for width on iphone6
     [self.navigationController pushViewController:viewController animated:YES];
 	[viewController release];
 }
@@ -373,7 +373,7 @@ static MainViewController *instance;
 	MenuViewController* menuViewController = [MenuViewController new];
 	menuViewController.menuItems = menuItems;
 	[self.navigationController setNavigationBarHidden:NO animated:YES];
-    self.navigationController.view.frame = [[UIScreen mainScreen] applicationFrame]; //iNethack2 - fix for width on iphone6
+    self.navigationController.view.frame = [[UIScreen mainScreen] bounds]; //iNethack2 - fix for width on iphone6
     
     [self.navigationController pushViewController:menuViewController animated:YES];
 	[menuViewController release];
@@ -511,7 +511,7 @@ static MainViewController *instance;
 				CGPoint p = [touch locationInView:self.view];
 				CGPoint delta = CGPointMake(p.x-ti.currentLocation.x, p.y-ti.currentLocation.y);
 				BOOL move = NO;
-				if (!ti.moved && (abs(delta.x)+abs(delta.y) > kMinimumPanDelta)) {
+                if (!ti.moved && (fabs(delta.x)+fabs(delta.y) > kMinimumPanDelta)) {
 					ti.moved = YES;
 					move = YES;
 				} else if (ti.moved) {
@@ -681,7 +681,16 @@ static MainViewController *instance;
 				mapBlocked = YES;
 			}
 		case NHW_MESSAGE:
-			[self.view performSelectorOnMainThread:@selector(setNeedsDisplay) withObject:nil waitUntilDone:YES];
+            if ([NSThread isMainThread])
+            {
+                [self.view setNeedsDisplay];
+            }
+            else
+            {
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    [self.view setNeedsDisplay];
+                });
+            }
 			if (mapBlocked) {
 				[self waitForUser];
 			}
@@ -718,10 +727,11 @@ static MainViewController *instance;
 
             [alert2.view setTranslatesAutoresizingMaskIntoConstraints:NO];
 
-            alert2.view.frame = CGRectMake([[UIScreen mainScreen] applicationFrame].origin.x,
-                                           [[UIScreen mainScreen] applicationFrame].origin.y,
-                                           [[UIScreen mainScreen] applicationFrame].size.width+1,
-                                           [[UIScreen mainScreen] applicationFrame].size.height+1);// iNethack2 - fix for no scrolling on initial story text popup (ios8 bug?)
+            CGRect screenBounds = [[UIScreen mainScreen] bounds];
+            alert2.view.frame = CGRectMake(screenBounds.origin.x,
+                                           screenBounds.origin.y,
+                                           screenBounds.size.width+1,
+                                           screenBounds.size.height+1);// iNethack2 - fix for no scrolling on initial story text popup (ios8 bug?)
 
             UIAlertAction* ok = [UIAlertAction
                                  actionWithTitle:@"OK"
@@ -750,7 +760,7 @@ static MainViewController *instance;
 - (void) displayMenuWindowOnUIThread:(Window *)w {
 	nethackMenuViewController.menuWindow = w;
 	[self.navigationController setNavigationBarHidden:NO animated:YES];
-    self.navigationController.view.frame = [[UIScreen mainScreen] applicationFrame]; //iNethack2 - fix for width on iphone6
+    self.navigationController.view.frame = [[UIScreen mainScreen] bounds]; //iNethack2 - fix for width on iphone6
     [self.navigationController pushViewController:nethackMenuViewController animated:YES];
 }
 
@@ -849,7 +859,7 @@ static MainViewController *instance;
 	textInputViewController.prompt = s;
 	textInputViewController.text = @"Elbereth";
 	[self.navigationController setNavigationBarHidden:NO animated:YES];
-    self.navigationController.view.frame = [[UIScreen mainScreen] applicationFrame]; //iNethack2 - fix for width on iphone6
+    self.navigationController.view.frame = [[UIScreen mainScreen] bounds]; //iNethack2 - fix for width on iphone6
 	[self.navigationController pushViewController:textInputViewController animated:YES];
 }
 
@@ -870,7 +880,7 @@ static MainViewController *instance;
 - (void) showExtendedCommandMenu:(id)obj {
 	extendedCommandViewController.title = @"Extended Command";
 	[self.navigationController setNavigationBarHidden:NO animated:YES];
-    self.navigationController.view.frame = [[UIScreen mainScreen] applicationFrame]; //iNethack2 - fix for width on iphone6
+    self.navigationController.view.frame = [[UIScreen mainScreen] bounds]; //iNethack2 - fix for width on iphone6
     [self.navigationController pushViewController:extendedCommandViewController animated:YES];
 }
 
@@ -917,7 +927,16 @@ static MainViewController *instance;
 }
 
 - (void) updateScreen {
-	[self.view performSelectorOnMainThread:@selector(setNeedsDisplay) withObject:nil waitUntilDone:YES];
+    if ([NSThread isMainThread])
+    {
+        [self.view setNeedsDisplay];
+    }
+    else
+    {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            [self.view setNeedsDisplay];
+        });
+    }
 }
 
 - (void) showKeyboard:(BOOL)d {
@@ -992,6 +1011,49 @@ static MainViewController *instance;
 	[clip release];
 	[dmath release];
     [super dealloc];
+}
+
+- (void)pressesBegan:(NSSet<UIPress *> *)presses
+           withEvent:(UIPressesEvent *)event
+{
+    bool handled = false;
+    
+    for (UIPress *press in presses) {
+        UIKey *key = press.key;
+        if (key)
+        {
+            if (key.charactersIgnoringModifiers == UIKeyInputUpArrow)
+            {
+                [nethackEventQueue addKeyEvent:'k'];
+                handled = true;
+            }
+            else if (key.charactersIgnoringModifiers == UIKeyInputDownArrow)
+            {
+                [nethackEventQueue addKeyEvent:'j'];
+                handled = true;
+            }
+            else if (key.charactersIgnoringModifiers == UIKeyInputLeftArrow)
+            {
+                [nethackEventQueue addKeyEvent:'h'];
+                handled = true;
+            }
+            else if (key.charactersIgnoringModifiers == UIKeyInputRightArrow)
+            {
+                [nethackEventQueue addKeyEvent:'l'];
+                handled = true;
+            }
+            else if (key.characters.length == 1 && isprint([key.characters characterAtIndex:0]))
+            {
+                [nethackEventQueue addKeyEvent:[key.characters characterAtIndex:0]];
+                handled = true;
+            }
+        }
+    }
+    
+    if (!handled)
+    {
+        [super pressesBegan:presses withEvent:event];
+    }
 }
 
 @end
